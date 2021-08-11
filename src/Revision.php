@@ -33,11 +33,17 @@ class Revision
      */
     private $username;
 
-    public function __construct($rev, \DateTime $timestamp, string $username)
+    /**
+     * @var string
+     */
+    private $locale;
+
+    public function __construct($rev, \DateTime $timestamp, string $username, string $locale = '')
     {
         $this->rev = $rev;
         $this->timestamp = $timestamp;
         $this->username = $username;
+        $this->locale = $locale;
     }
 
     public function getRev()
@@ -53,5 +59,10 @@ class Revision
     public function getUsername()
     {
         return $this->username;
+    }
+
+    public function getLocale()
+    {
+        return $this->locale!== '' ? $this->locale : '-';
     }
 }

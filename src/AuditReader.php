@@ -545,7 +545,7 @@ class AuditReader
             }
         }
 
-        $query = 'SELECT r.* FROM '.$this->config->getRevisionTableName().' r '.
+        $query = 'SELECT r.*, e.locale FROM '.$this->config->getRevisionTableName().' r '.
                  'INNER JOIN '.$tableName.' e ON r.id = e.'.$this->config->getRevisionFieldName().' WHERE '.$whereSQL.' ORDER BY r.id DESC';
         $revisionsData = $this->em->getConnection()->fetchAllAssociative($query, array_values($id));
 
@@ -554,7 +554,8 @@ class AuditReader
             $revisions[] = new Revision(
                 $row['id'],
                 \DateTime::createFromFormat($this->platform->getDateTimeFormatString(), $row['timestamp']),
-                $row['username']
+                $row['username'],
+                $row['locale']
             );
         }
 

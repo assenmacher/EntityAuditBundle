@@ -24,6 +24,7 @@ class AuditConfiguration
     private $revisionTableName = 'revisions';
     private $revisionFieldName = 'rev';
     private $revisionTypeFieldName = 'revtype';
+    private $revisionLocaleFieldName = 'locale';
     private $revisionIdFieldType = 'integer';
     private $usernameCallable;
 
@@ -91,6 +92,16 @@ class AuditConfiguration
     public function setRevisionTypeFieldName($revisionTypeFieldName): void
     {
         $this->revisionTypeFieldName = $revisionTypeFieldName;
+    }
+
+    public function getRevisionLocaleFieldName()
+    {
+        return $this->revisionLocaleFieldName;
+    }
+
+    public function setRevisionLocaleFieldName($revisionLocaleFieldName): void
+    {
+        $this->revisionLocaleFieldName = $revisionLocaleFieldName;
     }
 
     public function getRevisionTableName()

@@ -43,6 +43,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('table_suffix')->defaultValue('_audit')->end()
                 ->scalarNode('revision_field_name')->defaultValue('rev')->end()
                 ->scalarNode('revision_type_field_name')->defaultValue('revtype')->end()
+                ->scalarNode('revision_locale_field_name')->defaultValue('locale')->end()
                 ->scalarNode('revision_table_name')->defaultValue('revisions')->end()
                 ->scalarNode('revision_id_field_type')
                     ->defaultValue('integer')

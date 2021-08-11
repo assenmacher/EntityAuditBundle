@@ -29,6 +29,8 @@ use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Persisters\Entity\BasicEntityPersister;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use Doctrine\ORM\UnitOfWork;
+use Gedmo\Translatable\TranslatableListener;
+use Sonata\TranslationBundle\Checker\TranslatableChecker;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use SimpleThings\EntityAudit\Metadata\MetadataFactory;
@@ -85,10 +87,22 @@ class LogRevisionsListener implements EventSubscriber
      */
     private $extraUpdates = [];
 
-    public function __construct(AuditManager $auditManager)
+    /**
+     * @var TranslatableChecker $translatableChecker
+     */
+    private $translatableChecker;
+
+    /**
+     * @var TranslatableListener $translationListener
+     */
+    private $translationListener;
+
+    public function __construct(AuditManager $auditManager, ?TranslatableChecker $translatableChecker, ?TranslatableListener $translationListener)
     {
         $this->config = $auditManager->getConfiguration();
         $this->metadataFactory = $auditManager->getMetadataFactory();
+        $this->translatableChecker = $translatableChecker;
+        $this->translationListener = $translationListener;
     }
 
     public function getSubscribedEvents()
@@ -205,7 +219,7 @@ class LogRevisionsListener implements EventSubscriber
             return;
         }
 
-        $this->saveRevisionEntityData($class, $this->getOriginalEntityData($entity), 'INS');
+        $this->saveRevisionEntityData($class, $entity, $this->getOriginalEntityData($entity), 'INS');
     }
 
     public function postUpdate(LifecycleEventArgs $eventArgs): void
@@ -232,7 +246,7 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         $entityData = array_merge($this->getOriginalEntityData($entity), $this->uow->getEntityIdentifier($entity));
-        $this->saveRevisionEntityData($class, $entityData, 'UPD');
+        $this->saveRevisionEntityData($class, $entity, $entityData, 'UPD');
     }
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
@@ -262,7 +276,7 @@ class LogRevisionsListener implements EventSubscriber
             }
 
             $entityData = array_merge($this->getOriginalEntityData($entity), $this->uow->getEntityIdentifier($entity));
-            $this->saveRevisionEntityData($class, $entityData, 'DEL');
+            $this->saveRevisionEntityData($class, $entity, $entityData, 'DEL');
         }
 
         foreach ($this->uow->getScheduledEntityInsertions() as $entity) {
@@ -336,11 +350,11 @@ class LogRevisionsListener implements EventSubscriber
     private function getInsertRevisionSQL($class)
     {
         if (!isset($this->insertRevisionSQL[$class->name])) {
-            $placeholders = ['?', '?'];
+            $placeholders = ['?', '?', '?'];
             $tableName = $this->config->getTableName($class);
 
             $sql = 'INSERT INTO '.$tableName.' ('.
-                $this->config->getRevisionFieldName().', '.$this->config->getRevisionTypeFieldName();
+                $this->config->getRevisionFieldName().', '.$this->config->getRevisionTypeFieldName().', '.$this->config->getRevisionLocaleFieldName();
 
             $fields = [];
 
@@ -391,15 +405,36 @@ class LogRevisionsListener implements EventSubscriber
         return $this->insertRevisionSQL[$class->name];
     }
 
+    private function gettRevisionLocale($entity): string
+    {
+        $revLocale = '';
+
+        if(!is_null($this->translatableChecker) && $this->translatableChecker->isTranslatable($entity))
+        {
+            if(\is_callable([$entity, 'getLocale']))
+            {
+                $revLocale = $entity->getLocale();
+            }
+
+            if((is_null($revLocale) || $revLocale === '') && !is_null($this->translationListener))
+            {
+                $revLocale = $this->translationListener->getListenerLocale() ?: $this->translationListener->getDefaultLocale();
+            }
+        }
+
+        return $revLocale;
+    }
+
     /**
      * @param ClassMetadata $class
+     * @param object        $entity
      * @param array         $entityData
      * @param string        $revType
      */
-    private function saveRevisionEntityData($class, $entityData, $revType): void
+    private function saveRevisionEntityData($class, $entity, $entityData, $revType): void
     {
-        $params = [$this->getRevisionId(), $revType];
-        $types = [\PDO::PARAM_INT, \PDO::PARAM_STR];
+        $params = [$this->getRevisionId(), $revType, $this->gettRevisionLocale($entity)];
+        $types = [\PDO::PARAM_INT, \PDO::PARAM_STR, \PDO::PARAM_STR];
 
         $fields = [];
 
@@ -462,6 +497,7 @@ class LogRevisionsListener implements EventSubscriber
             $entityData[$class->discriminatorColumn['name']] = $class->discriminatorValue;
             $this->saveRevisionEntityData(
                 $this->em->getClassMetadata($class->rootEntityName),
+                $entity,
                 $entityData,
                 $revType
             );

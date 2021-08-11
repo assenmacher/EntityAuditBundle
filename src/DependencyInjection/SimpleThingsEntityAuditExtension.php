@@ -36,6 +36,7 @@ class SimpleThingsEntityAuditExtension extends Extension
             'table_suffix',
             'revision_field_name',
             'revision_type_field_name',
+            'revision_locale_field_name',
             'revision_table_name',
             'revision_id_field_type',
             'global_ignore_columns',
