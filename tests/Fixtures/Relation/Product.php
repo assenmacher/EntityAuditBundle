@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,14 +24,18 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class Product extends SomeEntity
 {
     /**
+     * @var string|null
+     *
      * @ORM\Column(type="string")
      */
-    private $name;
+    protected $name;
 
     /**
+     * @var Category|null
+     *
      * @ORM\ManyToOne(targetEntity="Category", inversedBy="products")
      */
-    private $category;
+    protected $category;
 
     public function __construct(string $name)
     {

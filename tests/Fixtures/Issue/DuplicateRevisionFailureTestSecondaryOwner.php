@@ -11,9 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -22,21 +23,25 @@ use Doctrine\ORM\Mapping as ORM;
 class DuplicateRevisionFailureTestSecondaryOwner extends DuplicateRevisionFailureTestEntity
 {
     /**
+     * @var DuplicateRevisionFailureTestPrimaryOwner|null
+     *
      * @ORM\ManyToOne(
      *     targetEntity="DuplicateRevisionFailureTestPrimaryOwner",
      *     inversedBy="secondaryOwners"
      * )
      */
-    private $primaryOwner;
+    protected $primaryOwner;
 
     /**
+     * @var Collection<int, DuplicateRevisionFailureTestOwnedElement>
+     *
      * @ORM\OneToMany(
      *     targetEntity="DuplicateRevisionFailureTestOwnedElement",
      *     mappedBy="secondaryOwner",
      *     cascade={"persist", "remove"}
      * )
      */
-    private $elements;
+    private Collection $elements;
 
     public function __construct()
     {

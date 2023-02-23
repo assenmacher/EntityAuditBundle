@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,6 +21,8 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class RelationAbstractEntityBase
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer", name="id_column")
      * @ORM\GeneratedValue(strategy="AUTO")

@@ -11,9 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -22,21 +23,30 @@ use Doctrine\ORM\Mapping as ORM;
 class Issue9Customer
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     /**
+     * @var Collection<int, Issue9Address>
+     *
      * @ORM\OneToMany(targetEntity="Issue9Address", mappedBy="customer")
      */
-    private $addresses;
+    private Collection $addresses;
 
     /**
      * @ORM\OneToOne(targetEntity="Issue9Address")
      */
-    private $primary_address;
+    private ?Issue9Address $primaryAddress = null;
+
+    public function __construct()
+    {
+        $this->addresses = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -44,28 +54,28 @@ class Issue9Customer
     }
 
     /**
-     * @return ArrayCollection|Issue9Address[]
+     * @return Collection<int, Issue9Address>
      */
-    public function getAddresses()
+    public function getAddresses(): Collection
     {
         return $this->addresses;
     }
 
+    /**
+     * @param Collection<int, Issue9Address> $addresses
+     */
     public function setAddresses($addresses): void
     {
         $this->addresses = $addresses;
     }
 
-    /**
-     * @return Issue9Address
-     */
     public function getPrimaryAddress(): ?Issue9Address
     {
-        return $this->primary_address;
+        return $this->primaryAddress;
     }
 
-    public function setPrimaryAddress(Issue9Address $primary_address): void
+    public function setPrimaryAddress(Issue9Address $primaryAddress): void
     {
-        $this->primary_address = $primary_address;
+        $this->primaryAddress = $primaryAddress;
     }
 }

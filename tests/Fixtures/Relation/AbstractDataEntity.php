@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,14 +32,12 @@ abstract class AbstractDataEntity
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     /**
-     * @var DataContainerEntity
-     *
      * @ORM\OneToOne(targetEntity="DataContainerEntity", mappedBy="data")
      */
-    private $dataContainer;
+    private ?DataContainerEntity $dataContainer = null;
 
     public function getId(): ?int
     {
@@ -51,7 +49,7 @@ abstract class AbstractDataEntity
         return $this->dataContainer;
     }
 
-    public function setDataContainer(DataContainerEntity $dataContainer)
+    public function setDataContainer(DataContainerEntity $dataContainer): void
     {
         $this->dataContainer = $dataContainer;
     }

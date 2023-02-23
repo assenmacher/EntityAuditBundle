@@ -15,21 +15,45 @@ namespace SimpleThings\EntityAudit;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use SimpleThings\EntityAudit\Metadata\MetadataFactory;
 
 class AuditConfiguration
 {
-    private $auditedEntityClasses = [];
-    private $globalIgnoreColumns = [];
-    private $tablePrefix = '';
-    private $tableSuffix = '_audit';
-    private $revisionTableName = 'revisions';
-    private $revisionFieldName = 'rev';
-    private $revisionTypeFieldName = 'revtype';
-    private $revisionIdFieldType = Types::INTEGER;
+    /**
+     * @var string[]
+     *
+     * @phpstan-var class-string[]
+     */
+    private array $auditedEntityClasses = [];
+
+    /**
+     * @var string[]
+     */
+    private array $globalIgnoreColumns = [];
+
+    private string $tablePrefix = '';
+
+    private string $tableSuffix = '_audit';
+
+    private string $revisionTableName = 'revisions';
+
+    private string $revisionFieldName = 'rev';
+
+    private string $revisionTypeFieldName = 'revtype';
+
+    private string $revisionIdFieldType = Types::INTEGER;
+
+    /**
+     * @var callable|null
+     */
     private $usernameCallable;
 
     /**
+     * @param string[] $classes
+     *
      * @return AuditConfiguration
+     *
+     * @phpstan-param class-string[] $classes
      */
     public static function forEntities(array $classes)
     {
@@ -40,88 +64,133 @@ class AuditConfiguration
     }
 
     /**
+     * @param ClassMetadataInfo<object> $metadata
+     *
      * @return string
      */
     public function getTableName(ClassMetadataInfo $metadata)
     {
         $tableName = $metadata->getTableName();
 
-        //## Fix for doctrine/orm >= 2.5
-        if (method_exists($metadata, 'getSchemaName') && $metadata->getSchemaName()) {
+        if (null !== $metadata->getSchemaName()) {
             $tableName = $metadata->getSchemaName().'.'.$tableName;
         }
 
         return $this->getTablePrefix().$tableName.$this->getTableSuffix();
     }
 
+    /**
+     * @return string
+     */
     public function getTablePrefix()
     {
         return $this->tablePrefix;
     }
 
+    /**
+     * @param string $prefix
+     */
     public function setTablePrefix($prefix): void
     {
         $this->tablePrefix = $prefix;
     }
 
+    /**
+     * @return string
+     */
     public function getTableSuffix()
     {
         return $this->tableSuffix;
     }
 
+    /**
+     * @param string $suffix
+     */
     public function setTableSuffix($suffix): void
     {
         $this->tableSuffix = $suffix;
     }
 
+    /**
+     * @return string
+     */
     public function getRevisionFieldName()
     {
         return $this->revisionFieldName;
     }
 
+    /**
+     * @param string $revisionFieldName
+     */
     public function setRevisionFieldName($revisionFieldName): void
     {
         $this->revisionFieldName = $revisionFieldName;
     }
 
+    /**
+     * @return string
+     */
     public function getRevisionTypeFieldName()
     {
         return $this->revisionTypeFieldName;
     }
 
+    /**
+     * @param string $revisionTypeFieldName
+     */
     public function setRevisionTypeFieldName($revisionTypeFieldName): void
     {
         $this->revisionTypeFieldName = $revisionTypeFieldName;
     }
 
+    /**
+     * @return string
+     */
     public function getRevisionTableName()
     {
         return $this->revisionTableName;
     }
 
+    /**
+     * @param string $revisionTableName
+     */
     public function setRevisionTableName($revisionTableName): void
     {
         $this->revisionTableName = $revisionTableName;
     }
 
+    /**
+     * @param string[] $classes
+     *
+     * @phpstan-param class-string[] $classes
+     */
     public function setAuditedEntityClasses(array $classes): void
     {
         $this->auditedEntityClasses = $classes;
     }
 
+    /**
+     * @return string[]
+     */
     public function getGlobalIgnoreColumns()
     {
         return $this->globalIgnoreColumns;
     }
 
+    /**
+     * @param string[] $columns
+     */
     public function setGlobalIgnoreColumns(array $columns): void
     {
         $this->globalIgnoreColumns = $columns;
     }
 
+    /**
+     * @return MetadataFactory
+     */
     public function createMetadataFactory()
     {
-        return new Metadata\MetadataFactory($this->auditedEntityClasses);
+        return new MetadataFactory($this->auditedEntityClasses);
     }
 
     /**
@@ -131,9 +200,7 @@ class AuditConfiguration
      */
     public function setCurrentUsername($username): void
     {
-        $this->setUsernameCallable(static function () use ($username) {
-            return $username;
-        });
+        $this->setUsernameCallable(static fn () => $username);
     }
 
     /**
@@ -143,9 +210,12 @@ class AuditConfiguration
     {
         $callable = $this->usernameCallable;
 
-        return (string) ($callable ? $callable() : '');
+        return null !== $callable ? (string) $callable() : '';
     }
 
+    /**
+     * @param callable $usernameCallable
+     */
     public function setUsernameCallable($usernameCallable): void
     {
         // php 5.3 compat
@@ -164,11 +234,17 @@ class AuditConfiguration
         return $this->usernameCallable;
     }
 
+    /**
+     * @param string $revisionIdFieldType
+     */
     public function setRevisionIdFieldType($revisionIdFieldType): void
     {
         $this->revisionIdFieldType = $revisionIdFieldType;
     }
 
+    /**
+     * @return string
+     */
     public function getRevisionIdFieldType()
     {
         return $this->revisionIdFieldType;

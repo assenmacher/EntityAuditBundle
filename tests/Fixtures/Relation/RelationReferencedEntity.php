@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,11 +24,15 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class RelationReferencedEntity extends RelationAbstractEntityBase
 {
     /**
+     * @var string|null
+     *
      * @ORM\Column(type="string")
      */
     protected $referencedField;
 
     /**
+     * @var RelationOneToOneEntity|null
+     *
      * @ORM\OneToOne(targetEntity="RelationOneToOneEntity", mappedBy="referencedEntity")
      */
     protected $oneToOne;

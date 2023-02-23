@@ -11,13 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Class Issue156ContactTelephoneNumber.
- *
  * @ORM\Entity()
  */
 class Issue156ContactTelephoneNumber
@@ -27,21 +25,17 @@ class Issue156ContactTelephoneNumber
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
-     * @var Issue156Contact
-     *
      * @ORM\ManyToOne(targetEntity="Issue156Contact", inversedBy="telephoneNumbers")
      */
-    private $contact;
+    private ?Issue156Contact $contact = null;
 
     /**
-     * @var string
-     *
      * @ORM\Column(type="string", length=255, nullable=false)
      */
-    private $number;
+    private ?string $number = null;
 
     public function setId(int $id): self
     {

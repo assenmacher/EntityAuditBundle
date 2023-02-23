@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,6 +21,8 @@ use Doctrine\ORM\Mapping as ORM;
 class PageLocalization
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -28,14 +30,18 @@ class PageLocalization
     protected $id;
 
     /**
+     * @var string|null
+     *
      * @ORM\Column(type="string")
      */
-    private $locale;
+    protected $locale;
 
     /**
+     * @var Page|null
+     *
      * @ORM\ManyToOne(targetEntity="Page", inversedBy="localizations")
      */
-    private $page;
+    protected $page;
 
     public function __construct(string $locale)
     {

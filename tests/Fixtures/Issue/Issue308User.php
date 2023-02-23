@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -29,21 +29,21 @@ class Issue308User
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     /**
-     * @var Collection
-     *
-     * @ORM\OneToMany(targetEntity="Issue308User", mappedBy="parent")
-     */
-    private $children;
-
-    /**
-     * @var Issue308User
+     * @var Issue308User|null
      *
      * @ORM\ManyToOne(targetEntity="Issue308User", inversedBy="children")
      */
-    private $parent;
+    protected $parent;
+
+    /**
+     * @var Collection<int, self>
+     *
+     * @ORM\OneToMany(targetEntity="Issue308User", mappedBy="parent")
+     */
+    private Collection $children;
 
     public function __construct()
     {
@@ -68,16 +68,19 @@ class Issue308User
         $this->children->add($child);
     }
 
+    /**
+     * @return Collection<int, self>
+     */
     public function getChildren(): Collection
     {
-        $activeChildren = $this->children->filter(static function (self $user): bool {
-            return $user->isActive();
-        });
+        $activeChildren = $this->children->filter(
+            static fn (self $user): bool => $user->isActive()
+        );
 
         return $activeChildren;
     }
 
-    public function getParent(): self
+    public function getParent(): ?self
     {
         return $this->parent;
     }

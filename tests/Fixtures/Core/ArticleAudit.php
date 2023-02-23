@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Core;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Core;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,31 +21,39 @@ use Doctrine\ORM\Mapping as ORM;
 class ArticleAudit
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue
      */
-    private $id;
+    protected $id;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="string", name="my_title_column")
      */
-    private $title;
+    protected $title;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
-    private $text;
+    protected $text;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
-    private $ignoreme;
+    protected $ignoreme;
 
     /**
      * @ORM\ManyToOne(targetEntity="UserAudit")
      */
-    private $author;
+    private ?UserAudit $author;
 
     public function __construct(string $title, string $text, UserAudit $author, string $ignoreme)
     {

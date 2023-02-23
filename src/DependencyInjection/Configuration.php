@@ -27,10 +27,19 @@ class Configuration implements ConfigurationInterface
         Types::GUID,
     ];
 
+    /**
+     * @psalm-suppress PossiblyNullReference, PossiblyUndefinedMethod
+     *
+     * @see https://github.com/psalm/psalm-plugin-symfony/issues/174
+     *
+     * @return TreeBuilder
+     */
     public function getConfigTreeBuilder()
     {
         $builder = new TreeBuilder('simple_things_entity_audit');
-        $builder->getRootNode()
+        $rootNode = $builder->getRootNode();
+
+        $rootNode
             ->children()
                 ->scalarNode('connection')->defaultValue('default')->end()
                 ->scalarNode('entity_manager')->defaultValue('default')->end()

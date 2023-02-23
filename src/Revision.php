@@ -23,33 +23,39 @@ class Revision
      */
     private $rev;
 
-    /**
-     * @var \DateTime
-     */
-    private $timestamp;
+    private \DateTime $timestamp;
+
+    private ?string $username;
 
     /**
-     * @var string
+     * @param int|string $rev
      */
-    private $username;
-
-    public function __construct($rev, \DateTime $timestamp, string $username)
+    public function __construct($rev, \DateTime $timestamp, ?string $username)
     {
         $this->rev = $rev;
         $this->timestamp = $timestamp;
         $this->username = $username;
     }
 
+    /**
+     * @return int|string
+     */
     public function getRev()
     {
         return $this->rev;
     }
 
+    /**
+     * @return \DateTime
+     */
     public function getTimestamp()
     {
         return $this->timestamp;
     }
 
+    /**
+     * @return string|null
+     */
     public function getUsername()
     {
         return $this->username;

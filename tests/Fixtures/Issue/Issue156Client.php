@@ -11,13 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Class Issue156Client.
- *
  * @ORM\Entity()
  */
 class Issue156Client extends Issue156Contact
@@ -25,7 +23,7 @@ class Issue156Client extends Issue156Contact
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $clientSpecificField;
+    private ?string $clientSpecificField = null;
 
     public function setClientSpecificField(string $clientSpecificField): self
     {

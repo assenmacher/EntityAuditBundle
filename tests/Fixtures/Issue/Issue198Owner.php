@@ -11,9 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -22,16 +23,20 @@ use Doctrine\ORM\Mapping as ORM;
 class Issue198Owner
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     /**
+     * @var Collection<int, Issue198Car>
+     *
      * @ORM\OneToMany(targetEntity="Issue198Car", mappedBy="owner")
      */
-    private $cars;
+    private Collection $cars;
 
     public function __construct()
     {
@@ -56,7 +61,10 @@ class Issue198Owner
         $this->cars->removeElement($car);
     }
 
-    public function getCars(): ArrayCollection
+    /**
+     * @return Collection<int, Issue198Car>
+     */
+    public function getCars(): Collection
     {
         return $this->cars;
     }

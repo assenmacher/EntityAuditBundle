@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,17 +21,19 @@ use Doctrine\ORM\Mapping as ORM;
 class Issue198Car
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     /**
      * @ORM\ManyToOne(targetEntity="Issue198Owner", inversedBy="cars")
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
      */
-    private $owner;
+    private ?Issue198Owner $owner = null;
 
     public function getId(): ?int
     {

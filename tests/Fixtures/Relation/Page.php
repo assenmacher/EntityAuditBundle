@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -23,24 +23,29 @@ use Doctrine\ORM\Mapping as ORM;
 class Page
 {
     /**
+     * @var int|null
+     *
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected $id;
+
+    /**
      * A page can have many aliases.
      *
-     * @var PageAlias[]
+     * @var Collection<int, PageAlias>
+     *
      * @ORM\OneToMany(targetEntity="PageAlias", mappedBy="page", cascade={"persist"})
      */
     protected $pageAliases;
 
     /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    /**
+     * @var Collection<string, PageLocalization>
+     *
      * @ORM\OneToMany(targetEntity="PageLocalization", mappedBy="page", indexBy="locale")
      */
-    private $localizations;
+    protected $localizations;
 
     public function __construct()
     {
@@ -57,7 +62,10 @@ class Page
         return $this->id;
     }
 
-    public function getLocalizations(): ?Collection
+    /**
+     * @return Collection<string, PageLocalization>
+     */
+    public function getLocalizations(): Collection
     {
         return $this->localizations;
     }
@@ -65,6 +73,6 @@ class Page
     public function addLocalization(PageLocalization $localization): void
     {
         $localization->setPage($this);
-        $this->localizations->set($localization->getLocale(), $localization);
+        $this->localizations->set($localization->getLocale() ?? '', $localization);
     }
 }

@@ -11,18 +11,19 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests;
+namespace Sonata\EntityAuditBundle\Tests;
 
-use Doctrine\Common\Cache\Psr6\DoctrineProvider;
+use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Proxy\ProxyFactory;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
-use Gedmo;
+use Gedmo\DoctrineExtensions;
 use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -35,6 +36,8 @@ abstract class BaseTest extends TestCase
     protected static $conn;
 
     /**
+     * NEXT_MAJOR: Use `\Doctrine\ORM\EntityManagerInterface` instead.
+     *
      * @var EntityManager
      */
     protected $em;
@@ -44,14 +47,28 @@ abstract class BaseTest extends TestCase
      */
     protected $auditManager;
 
+    /**
+     * @var string[]
+     *
+     * @phpstan-var list<class-string>
+     */
     protected $schemaEntities = [];
 
+    /**
+     * @var string[]
+     *
+     * @phpstan-var list<class-string>
+     */
     protected $auditedEntities = [];
 
     /**
-     * @var SchemaTool
+     * @var string[]
+     *
+     * @phpstan-var array<string, class-string<Type>>
      */
-    private $schemaTool;
+    protected $customTypes = [];
+
+    private ?SchemaTool $schemaTool = null;
 
     protected function setUp(): void
     {
@@ -74,24 +91,30 @@ abstract class BaseTest extends TestCase
 
         $config = new Configuration();
         $config->setMetadataCache(new ArrayAdapter());
-        $config->setQueryCacheImpl(DoctrineProvider::wrap(new ArrayAdapter()));
+        $config->setQueryCache(new ArrayAdapter());
         $config->setProxyDir(__DIR__.'/Proxies');
-        $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
-        $config->setProxyNamespace('SimpleThings\EntityAudit\Tests\Proxies');
+        $config->setAutoGenerateProxyClasses(AbstractProxyFactory::AUTOGENERATE_EVAL);
+        $config->setProxyNamespace('Sonata\EntityAuditBundle\Tests\Proxies');
 
-        $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver([
-            realpath(__DIR__.'/Fixtures/Core'),
-            realpath(__DIR__.'/Fixtures/Issue'),
-            realpath(__DIR__.'/Fixtures/Relation'),
-        ], false));
+        $mappingPaths = [
+            __DIR__.'/Fixtures/Core',
+            __DIR__.'/Fixtures/Issue',
+            __DIR__.'/Fixtures/Relation',
+        ];
 
-        Gedmo\DoctrineExtensions::registerAnnotations();
+        if (version_compare(\PHP_VERSION, '8.1.0', '>=')) {
+            $mappingPaths[] = __DIR__.'/Fixtures/PHP81Issue';
+        }
+
+        $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver($mappingPaths, false));
+
+        DoctrineExtensions::registerAnnotations();
 
         $connection = $this->_getConnection();
 
         // get rid of more global state
         $evm = $connection->getEventManager();
-        foreach ($evm->getListeners() as $event => $listeners) {
+        foreach ($evm->getAllListeners() as $event => $listeners) {
             foreach ($listeners as $listener) {
                 $evm->removeEventListener([$event], $listener);
             }
@@ -99,13 +122,11 @@ abstract class BaseTest extends TestCase
 
         $this->em = EntityManager::create($connection, $config);
 
-        if (isset($this->customTypes) && \is_array($this->customTypes)) {
-            foreach ($this->customTypes as $customTypeName => $customTypeClass) {
-                if (!Type::hasType($customTypeName)) {
-                    Type::addType($customTypeName, $customTypeClass);
-                }
-                $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('db_'.$customTypeName, $customTypeName);
+        foreach ($this->customTypes as $customTypeName => $customTypeClass) {
+            if (!Type::hasType($customTypeName)) {
+                Type::addType($customTypeName, $customTypeClass);
             }
+            $this->em->getConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('db_'.$customTypeName, $customTypeName);
         }
 
         return $this->em;
@@ -117,14 +138,17 @@ abstract class BaseTest extends TestCase
             return $this->schemaTool;
         }
 
-        return $this->schemaTool = new SchemaTool($this->getEntityManager());
+        $this->schemaTool = new SchemaTool($this->getEntityManager());
+
+        return $this->schemaTool;
     }
 
     protected function _getConnection(): Connection
     {
         if (!isset(self::$conn)) {
-            if (false !== getenv('DATABASE_URL')) {
-                $params = ['url' => getenv('DATABASE_URL')];
+            $url = getenv('DATABASE_URL');
+            if (false !== $url) {
+                $params = ['url' => $url];
             } else {
                 $params = [
                     'driver' => 'pdo_sqlite',
@@ -146,22 +170,26 @@ abstract class BaseTest extends TestCase
 
         $auditConfig = AuditConfiguration::forEntities($this->auditedEntities);
         $auditConfig->setGlobalIgnoreColumns(['ignoreme']);
-        $auditConfig->setUsernameCallable(static function () {
-            return 'beberlei';
-        });
+        $auditConfig->setUsernameCallable(static fn (): string => 'beberlei');
 
-        $auditManager = new AuditManager($auditConfig);
+        $auditManager = new AuditManager($auditConfig, $this->getClock());
         $auditManager->registerEvents($this->_getConnection()->getEventManager());
 
         return $this->auditManager = $auditManager;
     }
 
+    protected function getClock(): ?ClockInterface
+    {
+        return null;
+    }
+
     protected function setUpEntitySchema(): void
     {
         $em = $this->getEntityManager();
-        $classes = array_map(static function ($value) use ($em) {
-            return $em->getClassMetadata($value);
-        }, $this->schemaEntities);
+        $classes = array_map(
+            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $this->schemaEntities
+        );
 
         $this->getSchemaTool()->createSchema($classes);
     }
@@ -169,9 +197,10 @@ abstract class BaseTest extends TestCase
     protected function tearDownEntitySchema(): void
     {
         $em = $this->getEntityManager();
-        $classes = array_map(static function ($value) use ($em) {
-            return $em->getClassMetadata($value);
-        }, $this->schemaEntities);
+        $classes = array_map(
+            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $this->schemaEntities
+        );
 
         $this->getSchemaTool()->dropSchema($classes);
     }

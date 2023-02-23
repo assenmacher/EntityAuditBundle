@@ -11,8 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -21,6 +23,8 @@ use Doctrine\ORM\Mapping as ORM;
 class OwnerEntity
 {
     /**
+     * @var int|null
+     *
      * @ORM\Id
      * @ORM\Column(type="integer", name="some_strange_key_name")
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -28,28 +32,49 @@ class OwnerEntity
     protected $id;
 
     /**
+     * @var string|null
+     *
      * @ORM\Column(type="string", name="crazy_title_to_mess_up_audit")
      */
     protected $title;
 
     /**
+    @var Collection<int, OwnedEntity1>
+     *
      * @ORM\OneToMany(targetEntity="OwnedEntity1", mappedBy="owner")
      */
     protected $owned1;
 
     /**
+     * @var Collection<int, OwnedEntity2>
+     *
      * @ORM\OneToMany(targetEntity="OwnedEntity2", mappedBy="owner")
      */
     protected $owned2;
 
     /**
-     * @ORM\ManyToMany(targetEntity="OwnedEntity3", mappedBy="owner")
+     * @var Collection<int, OwnedEntity3>
+     *
+     * @ORM\ManyToMany(targetEntity="OwnedEntity3", inversedBy="owner")
      * @ORM\JoinTable(name="owner_owned3",
-     *   joinColumns={@ORM\JoinColumn(name="owned3_id", referencedColumnName="strange_owned_id_name")},
-     *   inverseJoinColumns={@ORM\JoinColumn(name="owner_id", referencedColumnName="some_strange_key_name")}
+     *   joinColumns={@ORM\JoinColumn(name="owner_id", referencedColumnName="some_strange_key_name")},
+     *   inverseJoinColumns={@ORM\JoinColumn(name="owned3_id", referencedColumnName="strange_owned_id_name")}
      * )
      */
     protected $owned3;
+
+    /**
+     * @var Collection<int, OwnedEntity4>
+     *
+     * @ORM\ManyToMany(targetEntity="OwnedEntity4", mappedBy="owners")
+     */
+    protected $ownedInverse;
+
+    public function __construct()
+    {
+        $this->owned3 = new ArrayCollection();
+        $this->ownedInverse = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -66,6 +91,9 @@ class OwnerEntity
         $this->title = $title;
     }
 
+    /**
+     * @return Collection<int, OwnedEntity1>
+     */
     public function getOwned1()
     {
         return $this->owned1;
@@ -76,6 +104,9 @@ class OwnerEntity
         $this->owned1[] = $owned1;
     }
 
+    /**
+     * @return Collection<int, OwnedEntity2>
+     */
     public function getOwned2()
     {
         return $this->owned2;
@@ -86,7 +117,10 @@ class OwnerEntity
         $this->owned2[] = $owned2;
     }
 
-    public function getOwned3()
+    /**
+     * @return Collection<int, OwnedEntity3>
+     */
+    public function getOwned3(): Collection
     {
         return $this->owned3;
     }
@@ -94,5 +128,18 @@ class OwnerEntity
     public function addOwned3(OwnedEntity3 $owned3): void
     {
         $this->owned3[] = $owned3;
+    }
+
+    /**
+     * @return Collection<int, OwnedEntity4>
+     */
+    public function getOwnedInverse(): Collection
+    {
+        return $this->ownedInverse;
+    }
+
+    public function addOwnedInverse(OwnedEntity4 $ownedInverse): void
+    {
+        $this->ownedInverse[] = $ownedInverse;
     }
 }
