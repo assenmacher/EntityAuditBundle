@@ -28,6 +28,8 @@ use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\Persistence\Mapping\MappingException;
 use Psr\Clock\ClockInterface;
+use Gedmo\Translatable\TranslatableListener;
+use Sonata\TranslationBundle\Checker\TranslatableChecker;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use SimpleThings\EntityAudit\DeferredChangedManyToManyEntityRevisionToPersist;
@@ -68,15 +70,27 @@ class LogRevisionsListener implements EventSubscriber
     private array $extraUpdates = [];
 
     /**
+     * @var TranslatableChecker $translatableChecker
+     */
+    private $translatableChecker;
+
+    /**
+     * @var TranslatableListener $translationListener
+     */
+    private $translationListener;
+
+    /**
      * @var array<DeferredChangedManyToManyEntityRevisionToPersist>
      */
     private array $deferredChangedManyToManyEntityRevisionsToPersist = [];
 
-    public function __construct(AuditManager $auditManager, ?ClockInterface $clock = null)
+    public function __construct(AuditManager $auditManager, ?ClockInterface $clock = null, ?TranslatableChecker $translatableChecker = null, ?TranslatableListener $translationListener = null)
     {
         $this->config = $auditManager->getConfiguration();
         $this->metadataFactory = $auditManager->getMetadataFactory();
         $this->clock = $clock;
+        $this->translatableChecker = $translatableChecker;
+        $this->translationListener = $translationListener;
     }
 
     /**
@@ -216,7 +230,7 @@ class LogRevisionsListener implements EventSubscriber
             $this->getOriginalEntityData($em, $entity),
             $this->getManyToManyRelations($em, $entity)
         );
-        $this->saveRevisionEntityData($em, $class, $entityData, 'INS');
+        $this->saveRevisionEntityData($em, $class, $entity, $entityData, 'INS');
     }
 
     public function postUpdate(LifecycleEventArgs $eventArgs): void
@@ -251,7 +265,7 @@ class LogRevisionsListener implements EventSubscriber
             $this->getManyToManyRelations($em, $entity)
         );
 
-        $this->saveRevisionEntityData($em, $class, $entityData, 'UPD');
+        $this->saveRevisionEntityData($em, $class, $entity, $entityData, 'UPD');
     }
 
     public function onClear(): void
@@ -287,7 +301,7 @@ class LogRevisionsListener implements EventSubscriber
                 $uow->getEntityIdentifier($entity),
                 $this->getManyToManyRelations($em, $entity)
             );
-            $this->saveRevisionEntityData($em, $class, $entityData, 'DEL');
+            $this->saveRevisionEntityData($em, $class, $entity, $entityData, 'DEL');
         }
 
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
@@ -391,11 +405,11 @@ class LogRevisionsListener implements EventSubscriber
     private function getInsertRevisionSQL(EntityManagerInterface $em, ClassMetadata $class): string
     {
         if (!isset($this->insertRevisionSQL[$class->name])) {
-            $placeholders = ['?', '?'];
+            $placeholders = ['?', '?', '?'];
             $tableName = $this->config->getTableName($class);
 
             $sql = 'INSERT INTO '.$tableName.' ('.
-                $this->config->getRevisionFieldName().', '.$this->config->getRevisionTypeFieldName();
+                $this->config->getRevisionFieldName().', '.$this->config->getRevisionTypeFieldName().', '.$this->config->getRevisionLocaleFieldName();
 
             $fields = [];
 
@@ -455,6 +469,26 @@ class LogRevisionsListener implements EventSubscriber
         return $this->insertRevisionSQL[$class->name];
     }
 
+    private function gettRevisionLocale($entity): string
+    {
+        $revLocale = '';
+
+        if(!is_null($this->translatableChecker) && $this->translatableChecker->isTranslatable($entity))
+        {
+            if(\is_callable([$entity, 'getLocale']))
+            {
+                $revLocale = $entity->getLocale();
+            }
+
+            if((is_null($revLocale) || $revLocale === '') && !is_null($this->translationListener))
+            {
+                $revLocale = $this->translationListener->getListenerLocale() ?: $this->translationListener->getDefaultLocale();
+            }
+        }
+
+        return $revLocale;
+    }
+
     /**
      * @param ClassMetadata<object> $class
      * @param ClassMetadata<object> $targetClass
@@ -497,16 +531,19 @@ class LogRevisionsListener implements EventSubscriber
     }
 
     /**
-     * @param ClassMetadata<object> $class
-     * @param array<string, mixed>  $entityData
+     * @param EntityManagerInterface $em
+     * @param ClassMetadata<object>  $class
+     * @param object                 $entity
+     * @param array<string, mixed>   $entityData
+     * @param string                 $revType
      */
-    private function saveRevisionEntityData(EntityManagerInterface $em, ClassMetadata $class, array $entityData, string $revType): void
+    private function saveRevisionEntityData(EntityManagerInterface $em, ClassMetadata $class, $entity, array $entityData, string $revType): void
     {
         $uow = $em->getUnitOfWork();
         $conn = $em->getConnection();
 
-        $params = [$this->getRevisionId($conn), $revType];
-        $types = [\PDO::PARAM_INT, \PDO::PARAM_STR];
+        $params = [$this->getRevisionId($conn), $revType, $this->gettRevisionLocale($entity)];
+        $types = [\PDO::PARAM_INT, \PDO::PARAM_STR, \PDO::PARAM_STR];
 
         $fields = [];
 
@@ -598,6 +635,7 @@ class LogRevisionsListener implements EventSubscriber
             $this->saveRevisionEntityData(
                 $em,
                 $em->getClassMetadata($class->rootEntityName),
+                $entity,
                 $entityData,
                 $revType
             );

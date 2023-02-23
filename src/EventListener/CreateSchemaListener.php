@@ -90,6 +90,8 @@ class CreateSchemaListener implements EventSubscriber
         }
         $revisionTable->addColumn($this->config->getRevisionFieldName(), $this->config->getRevisionIdFieldType());
         $revisionTable->addColumn($this->config->getRevisionTypeFieldName(), Types::STRING, ['length' => 4]);
+        $revisionTable->addColumn($this->config->getRevisionLocaleFieldName(), Types::STRING, ['length' => 2,'default' => '-']);
+
         if (!\in_array($cm->inheritanceType, [ClassMetadataInfo::INHERITANCE_TYPE_NONE, ClassMetadataInfo::INHERITANCE_TYPE_JOINED, ClassMetadataInfo::INHERITANCE_TYPE_SINGLE_TABLE], true)) {
             throw new \Exception(sprintf('Inheritance type "%s" is not yet supported', $cm->inheritanceType));
         }
@@ -204,7 +206,8 @@ class CreateSchemaListener implements EventSubscriber
             );
         }
         $revisionJoinTable->addColumn($this->config->getRevisionFieldName(), $this->config->getRevisionIdFieldType());
-        $revisionJoinTable->addColumn($this->config->getRevisionTypeFieldName(), 'string', ['length' => 4]);
+        $revisionJoinTable->addColumn($this->config->getRevisionTypeFieldName(), Types::STRING, ['length' => 4]);
+        $revisionJoinTable->addColumn($this->config->getRevisionLocaleFieldName(), Types::STRING, ['length' => 2,'default' => '-']);
 
         $pk = $joinTable->getPrimaryKey();
         $pkColumns = null !== $pk ? $pk->getColumns() : [];

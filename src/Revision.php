@@ -23,18 +23,33 @@ class Revision
      */
     private $rev;
 
-    private \DateTime $timestamp;
-
-    private ?string $username;
+    /**
+     * @var \DateTime
+     */
+    private $timestamp;
 
     /**
-     * @param int|string $rev
+     * @var string
      */
-    public function __construct($rev, \DateTime $timestamp, ?string $username)
+    private $username;
+
+    /**
+     * @var string
+     */
+    private $locale;
+
+    /**
+     * @param $rev
+     * @param \DateTime $timestamp
+     * @param string|null $username
+     * @param string|null $locale
+     */
+    public function __construct($rev, \DateTime $timestamp, ?string $username, ?string $locale)
     {
         $this->rev = $rev;
         $this->timestamp = $timestamp;
         $this->username = $username;
+        $this->locale = !empty($locale) ? $locale : '-';
     }
 
     /**
@@ -59,5 +74,13 @@ class Revision
     public function getUsername()
     {
         return $this->username;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getLocale()
+    {
+        return $this->locale!== '' ? $this->locale : '-';
     }
 }

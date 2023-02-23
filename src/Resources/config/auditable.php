@@ -34,6 +34,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ->set('simplethings.entityaudit.table_suffix', null)
         ->set('simplethings.entityaudit.revision_field_name', null)
         ->set('simplethings.entityaudit.revision_type_field_name', null)
+        ->set('simplethings.entityaudit.revision_locale_field_name', null)
         ->set('simplethings.entityaudit.revision_table_name', null)
         ->set('simplethings.entityaudit.revision_id_field_type', null);
 
@@ -64,6 +65,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ->args([
                 new ReferenceConfigurator('simplethings_entityaudit.manager'),
                 (new ReferenceConfigurator(ClockInterface::class))->nullOnInvalid(),
+                (new ReferenceConfigurator('sonata_translation.checker.translatable'))->nullOnInvalid(),
+                (new ReferenceConfigurator('sonata_translation.listener.translatable'))->nullOnInvalid()
             ])
 
         ->set('simplethings_entityaudit.create_schema_listener', CreateSchemaListener::class)
@@ -87,6 +90,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ->call('setRevisionIdFieldType', ['%simplethings.entityaudit.revision_id_field_type%'])
             ->call('setRevisionFieldName', ['%simplethings.entityaudit.revision_field_name%'])
             ->call('setRevisionTypeFieldName', ['%simplethings.entityaudit.revision_type_field_name%'])
+            ->call('setRevisionLocaleFieldName', ['%simplethings.entityaudit.revision_locale_field_name%'])
             ->call('setUsernameCallable', [new ReferenceConfigurator('simplethings_entityaudit.username_callable')])
             ->alias(AuditConfiguration::class, 'simplethings_entityaudit.config');
 };

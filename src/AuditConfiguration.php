@@ -41,6 +41,8 @@ class AuditConfiguration
 
     private string $revisionTypeFieldName = 'revtype';
 
+    private string $revisionLocaleFieldName = 'locale';
+
     private string $revisionIdFieldType = Types::INTEGER;
 
     /**
@@ -141,6 +143,22 @@ class AuditConfiguration
     public function setRevisionTypeFieldName($revisionTypeFieldName): void
     {
         $this->revisionTypeFieldName = $revisionTypeFieldName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRevisionLocaleFieldName()
+    {
+        return $this->revisionLocaleFieldName;
+    }
+
+    /**
+     * @param string $revisionLocaleFieldName
+     */
+    public function setRevisionLocaleFieldName($revisionLocaleFieldName): void
+    {
+        $this->revisionLocaleFieldName = $revisionLocaleFieldName;
     }
 
     /**

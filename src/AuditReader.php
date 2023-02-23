@@ -559,7 +559,7 @@ class AuditReader
         }
 
         $query = sprintf(
-            'SELECT r.* FROM %s r INNER JOIN %s e ON r.id = e.%s  WHERE %s ORDER BY r.id DESC',
+            'SELECT r.*, e.locale FROM %s r INNER JOIN %s e ON r.id = e.%s  WHERE %s ORDER BY r.id DESC',
             $this->config->getRevisionTableName(),
             $tableName,
             $this->config->getRevisionFieldName(),
@@ -572,7 +572,7 @@ class AuditReader
             $timestamp = \DateTime::createFromFormat($this->platform->getDateTimeFormatString(), $row['timestamp']);
             \assert(false !== $timestamp);
 
-            $revisions[] = new Revision($row['id'], $timestamp, $row['username']);
+            $revisions[] = new Revision($row['id'], $timestamp, $row['username'], $row['locale']);
         }
 
         return $revisions;
