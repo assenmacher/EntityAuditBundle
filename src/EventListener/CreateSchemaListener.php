@@ -125,7 +125,11 @@ class CreateSchemaListener implements EventSubscriber
             /** @var string[] $foreignColumnNames */
             $foreignColumnNames = array_keys($keyColumns);
         } else {
-            /** @var string[] $foreignColumnNames */
+            /**
+             * @phpstan-ignore-next-line
+             *
+             * @var string[] $foreignColumnNames
+             */
             $foreignColumnNames = $keyColumns;
         }
 
